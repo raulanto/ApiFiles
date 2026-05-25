@@ -1,41 +1,79 @@
-var builder = WebApplication.CreateBuilder(args);
+using ApiCargaArchivos.Application.Interfaces;
+using ApiCargaArchivos.Application.UseCases;
+using ApiCargaArchivos.Infrastructure.Repositories;
+using ApiCargaArchivos.Infrastructure.Storage;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Serilog;
+using System.Reflection;
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Configuración inicial de Serilog
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+try
 {
-    app.MapOpenApi();
+    Log.Information("Iniciando aplicación");
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services));
+
+    builder.Services.AddControllers();
+
+    builder.Services.AddScoped<IFileRepository, FileRepository>();
+    builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+    builder.Services.AddScoped<IUploadFileUseCase, UploadFileUseCase>();
+    builder.Services.AddScoped<IGetFileUseCase, GetFileUseCase>();
+    builder.Services.AddScoped<IDeleteFileUseCase, DeleteFileUseCase>();
+    builder.Services.AddScoped<IUpdateFileUseCase, UpdateFileUseCase>();
+
+    builder.Services.AddFluentValidationAutoValidation()
+                    .AddFluentValidationClientsideAdapters();
+    builder.Services.AddValidatorsFromAssemblyContaining<IUploadFileUseCase>();
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
+    {
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        c.IncludeXmlComments(xmlPath);
+    });
+
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowAll", policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+    });
+
+    var app = builder.Build();
+
+    app.UseSerilogRequestLogging();
+
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Carga Archivos v1");
+        c.RoutePrefix = "swagger";
+    });
+
+    app.UseCors("AllowAll");
+
+    app.MapControllers();
+
+    app.Run();
 }
-
-app.UseHttpsRedirection();
-
-var summaries = new[]
+catch (Exception ex)
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
+    Log.Fatal(ex, "Fallo al iniciar la aplicación");
+}
+finally
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    Log.CloseAndFlush();
 }
