@@ -1,9 +1,11 @@
 using ApiCargaArchivos.Application.Interfaces;
 using ApiCargaArchivos.Application.UseCases;
+using ApiCargaArchivos.Infrastructure.Data;
 using ApiCargaArchivos.Infrastructure.Repositories;
 using ApiCargaArchivos.Infrastructure.Storage;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Reflection;
 
@@ -22,6 +24,9 @@ try
         .ReadFrom.Services(services));
 
     builder.Services.AddControllers();
+
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
     builder.Services.AddScoped<IFileRepository, FileRepository>();
     builder.Services.AddScoped<IFileStorageService, FileStorageService>();

@@ -1,6 +1,6 @@
 # API Carga de Archivos (.NET 10)
 
-API RESTful desarrollada en **.NET 10** bajo los principios de **Clean Architecture**, diseñada para gestionar el ciclo de vida completo de archivos (subida, consulta/descarga, actualización y eliminación) combinando almacenamiento físico en disco y persistencia de metadatos en **PostgreSQL** mediante **Dapper**.
+API RESTful desarrollada en **.NET 10** bajo los principios de **Clean Architecture**, diseñada para gestionar el ciclo de vida completo de archivos (subida, consulta/descarga, actualización y eliminación) combinando almacenamiento físico en disco y persistencia de metadatos en **PostgreSQL** mediante **Entity Framework Core**.
 
 ---
 
@@ -30,7 +30,8 @@ ApiFiles/
 │   └── Validators/          # Reglas con FluentValidation
 │
 ├── Infrastructure/          # Acceso a datos y sistema de archivos
-│   ├── Repositories/        # Implementación de persistencia con Dapper y Npgsql
+│   ├── Data/                # ApplicationDbContext (EF Core)
+│   ├── Repositories/        # Implementación de persistencia con EF Core
 │   └── Storage/             # Servicio de lectura/escritura en disco
 │
 └── Controllers/             # Endpoints HTTP (FilesController)
@@ -42,8 +43,7 @@ ApiFiles/
 
 - **Framework**: .NET 10 (ASP.NET Core Web API)
 - **Base de Datos**: PostgreSQL
-- **Micro-ORM**: [Dapper](https://github.com/DapperLib/Dapper) (consultas SQL de alto rendimiento)
-- **Driver PostgreSQL**: [Npgsql](https://www.npgsql.org/)
+- **ORM**: [Entity Framework Core](https://learn.microsoft.com/ef/core/) (`Npgsql.EntityFrameworkCore.PostgreSQL`)
 - **Validaciones**: [FluentValidation](https://fluentvalidation.net/)
 - **Documentación de API**: Swagger / OpenAPI ([Swashbuckle](https://github.com/domaindrivendev/Swashbuckle.AspNetCore))
 - **Logging**: [Serilog](https://serilog.net/) (salida a consola y archivos rotativos en `/Logs`)
