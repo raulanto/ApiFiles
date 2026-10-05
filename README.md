@@ -50,15 +50,22 @@ ApiFiles/
 
 ---
 
-## 🗄️ Esquema de Base de Datos
+## 🗄️ Base de Datos y Docker
 
-Antes de ejecutar la API, asegúrate de tener creada la base de datos `carga_archivos` en PostgreSQL y la tabla correspondiente:
+Puedes levantar PostgreSQL de forma automática usando **Docker Compose**. El contenedor ya incluye un script de inicialización ([`docker/init.sql`](file:///home/raulantodev/Projects/backend/ApiFiles/docker/init.sql)) que crea la tabla `uploaded_files` con las credenciales que coinciden con [appsettings.json](file:///home/raulantodev/Projects/backend/ApiFiles/appsettings.json).
 
+### Iniciar la base de datos con Docker:
+```bash
+docker compose up -d
+```
+
+### Detener el contenedor:
+```bash
+docker compose down
+```
+
+### Esquema SQL utilizado:
 ```sql
-CREATE DATABASE carga_archivos;
-
-\c carga_archivos;
-
 CREATE TABLE IF NOT EXISTS uploaded_files (
     id UUID PRIMARY KEY,
     original_name VARCHAR(255) NOT NULL,
